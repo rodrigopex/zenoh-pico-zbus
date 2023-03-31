@@ -20,10 +20,10 @@
 #define CLIENT_OR_PEER 0  // 0: Client mode; 1: Peer mode
 #if CLIENT_OR_PEER == 0
 #define MODE "client"
-#define PEER ""  // If empty, it will scout
-#elif CLIENT_OR_PEER == 1
-#define MODE "peer"
-#define PEER "udp/224.0.0.225:7447#iface=en0"
+#define PEER "serial/uart0#baudrate=115200"  // If empty, it will scout
+//#elif CLIENT_OR_PEER == 1
+//#define MODE "peer"
+//#define PEER "udp/224.0.0.225:7447#iface=en0"
 #else
 #error "Unknown Zenoh operation mode. Check CLIENT_OR_PEER value."
 #endif

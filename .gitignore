@@ -1,0 +1,5 @@
+zenoh-pico/
+build/
+.idea/
+cmake-build-debug/
+

@@ -1,56 +1,45 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-# Uncomment for (gdbserver) debugging
-if(BOARD MATCHES "qemu_.*")
-  list(APPEND QEMU_EXTRA_FLAGS -serial tcp:127.0.0.1:5678,server)
-endif()
-
-if(BOARD MATCHES "rpi_pico")
-  set(ZENOHPICO_CFLAGS "-DZENOH_NO_STDATOMIC")
-endif()
+if (BOARD MATCHES "rpi_pico")
+    add_definitions(-DZENOH_NO_STDATOMIC)
+endif ()
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(zenoh_hello_world)
+project(zenoh_pico_zbus)
 
-include(ExternalProject)
-include(CMakePrintHelpers)
+set(ZENOHPICO_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/zenoh-pico/include)
 
-zephyr_get_system_include_directories_for_lang_as_string(C ext_system_includes)
-zephyr_get_include_directories_for_lang_as_string(C ext_includes)
-zephyr_get_compile_definitions_for_lang_as_string(C ext_defs)
-zephyr_get_compile_options_for_lang_as_String(C ext_opts)
-set(ZENOHPICO_CFLAGS
-        "${ZENOHPICO_CFLAGS} ${ext_defs} ${ext_system_includes} ${ext_includes} ${ext_opts}"
-)
+file(GLOB Sources
+        "zenoh-pico/src/*.c"
+        "zenoh-pico/src/api/*.c"
+        "zenoh-pico/src/net/*.c"
+        "zenoh-pico/src/collections/*.c"
+        "zenoh-pico/src/link/*.c"
+        "zenoh-pico/src/link/config/*.c"
+        "zenoh-pico/src/link/unicast/*.c"
+        #        "zenoh-pico/src/link/multicast/*.c"
+        "zenoh-pico/src/protocol/*.c"
+        "zenoh-pico/src/protocol/keyexpr/*.c"
+        "zenoh-pico/src/session/*.c"
+        "zenoh-pico/src/system/zephyr/*.c"
+        "zenoh-pico/src/transport/*.c"
+        "zenoh-pico/src/transport/common/*.c"
+        "zenoh-pico/src/transport/unicast/*.c"
+        "zenoh-pico/src/transport/unicast/link/*.c"
+        "zenoh-pico/src/transport/unicast/link/task/*.c"
+        #        "zenoh-pico/src/transport/multicast/*.c"
+        #        "zenoh-pico/src/transport/multicast/link/*.c"
+        #        "zenoh-pico/src/transport/multicast/link/task/*.c"
+        "zenoh-pico/src/utils/*.c"
+        )
 
-set(ZENOHPICO_LIB_DIR ${CMAKE_SOURCE_DIR}/build/zenoh-pico-prefix/lib)
-set(ZENOHPICO_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/build/zenoh-pico-prefix/include)
-
-ExternalProject_Add(zenoh-pico
-  GIT_REPOSITORY https://github.com/cguimaraes/zenoh-pico.git
-  GIT_TAG zephyr-module
-  BUILD_COMMAND ${CMAKE_COMMAND} --build .
-  CMAKE_ARGS
-  -DWITH_ZEPHYR=1 -DBUILD_INTEGRATION=OFF -DBUILD_TOOLS=OFF -DBUILD_TESTING=OFF -DBUILD_MULTICAST=OFF
-    -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY
-    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-    -DCMAKE_VERBOSE_MAKEFILE=1
-    -DCMAKE_C_FLAGS=${ZENOHPICO_CFLAGS}
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-    -DCMAKE_SYSTEM_NAME=Generic
-    -DCMAKE_BUILD_TYPE=Debug
-  DEPENDS zephyr_interface
-  BUILD_BYPRODUCTS ${ZENOHPICO_LIB_DIR}/libzenohpico.a
-)
-add_library(zenohpico_lib STATIC IMPORTED GLOBAL)
-add_dependencies(zenohpico_lib zenoh-pico)
-set_target_properties(zenohpico_lib PROPERTIES IMPORTED_LOCATION ${ZENOHPICO_LIB_DIR}/libzenohpico.a)
 add_definitions(-DZENOH_ZEPHYR)
 
-target_include_directories(app PUBLIC ${ZENOHPICO_INCLUDE_DIR})
-target_link_libraries(app PUBLIC zenohpico_lib)
+include_directories(app PUBLIC ${ZENOHPICO_INCLUDE_DIR})
+#target_link_libraries(app PUBLIC zenohpico_lib)
 
 target_sources(app
-    PRIVATE
-    src/main.c
-)
+        PRIVATE
+        ${Sources}
+        src/main.c
+        )
